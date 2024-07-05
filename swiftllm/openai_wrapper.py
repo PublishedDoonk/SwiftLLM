@@ -9,11 +9,6 @@ class OpenAI(LanguageModel):
             raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
         if api_key:
             os.environ['OPENAI_API_KEY'] = api_key
-        #try:
-        #    self.key = os.getenv('OPENAI_API_KEY')
-        #    print(self.key)
-        #except Exception as e:
-        #    raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
         self.project = project
         self.organization = organization
         self.model = model
@@ -37,12 +32,18 @@ class OpenAI(LanguageModel):
         This method generates a response from the OpenAI model given a prompt.
         """
         self.format_messages(role='user', content=prompt)
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=self.prev_messages,
-            stream=self.streaming,
-            max_tokens=max_tokens
-        )
+        kwargs = {
+            'model': self.model,
+            'messages': self.prev_messages,
+            'max_tokens': max_tokens,
+        }
+        if self.streaming == 1: # if streaming is truthy, set stream to true
+            kwargs['stream'] = True
+        
+        if self.response_type == 'JSON': # take advantage of OpenAI's JSON output mode
+            kwargs['type'] = 'json_object'
+        
+        response = self.client.chat.completions.create(**kwargs)
         self.format_messages(role='assistant', content=response.choices[0].message.content)
         if self.response_type == 'RAW':
             return response
