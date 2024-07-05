@@ -115,6 +115,7 @@ class LanguageModel:
             text (str): the body of text to look for JSON substrings in.
         """
         
+        
     
     def generate(self, prompt, max_tokens):
         """
