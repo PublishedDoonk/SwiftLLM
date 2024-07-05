@@ -2,9 +2,10 @@ from .genai_wrapper import LanguageModel
 import openai
 import requests
 import os
+import json
 
 class OpenAI(LanguageModel):
-    def __init__(self, instructions: str = None, sample_outputs: list = None, schema: dict = None, prev_messages: list = None, response_type: str = None, model: str = 'gpt-3.5-turbo', streaming=False, organization: str = '', project: str = '', api_key: str = None):
+    def __init__(self, instructions: str = None, sample_outputs: list = None, schema: dict = None, prev_messages: list = None, response_type: str = None, model: str = 'gpt-4-turbo', streaming=False, organization: str = '', project: str = '', api_key: str = None):
         if os.getenv('OPENAI_API_KEY') is None and api_key is None:
             raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
         if api_key:
@@ -31,25 +32,49 @@ class OpenAI(LanguageModel):
         """
         This method generates a response from the OpenAI model given a prompt.
         """
+        if self.response_type == 'JSON':
+            prompt = f'Input: {prompt}\n\nOutput JSON Schema:\n{json.dumps(self.schema)}\n\nList of Sample Outputs:\n{json.dumps(self.sample_outputs)}'
         self.format_messages(role='user', content=prompt)
+        
+        kwargs = self.get_kwargs(max_tokens)
+        
+        return self.get_response(kwargs)
+    
+    def get_kwargs(self, max_tokens: int):
+        """
+        Build out all the arguments needed for the OpenAI API call based on the model's properties.
+        """
+        # initialize the kwargs dictionary with model, messages, and max_tokens
         kwargs = {
             'model': self.model,
             'messages': self.prev_messages,
             'max_tokens': max_tokens,
         }
-        if self.streaming == 1: # if streaming is truthy, set stream to true
+        
+        # if streaming is truthy, set stream to true
+        if self.streaming == 1: 
             kwargs['stream'] = True
         
-        if self.response_type == 'JSON': # take advantage of OpenAI's JSON output mode
-            kwargs['type'] = 'json_object'
+        # take advantage of OpenAI's JSON output mode
+        if self.response_type == 'JSON': 
+            kwargs['response_format'] = {'type': 'json_object'}
         
+        return kwargs
+        
+        
+    def get_response(self, kwargs: dict):
+        """
+        Generate a response to the prompt using the OpenAI API. Return the suitable response based on the response_type.
+        """
         response = self.client.chat.completions.create(**kwargs)
+        
         self.format_messages(role='assistant', content=response.choices[0].message.content)
+        
         if self.response_type == 'RAW':
             return response
         if self.response_type == 'CONTENT':
             return response.choices[0].message.content
+        return json.loads(response.choices[0].message.content)
         
         
-    
         
