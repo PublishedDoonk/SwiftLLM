@@ -138,7 +138,25 @@ class LanguageModel:
         """
         print('ACTIVITY LOG:')
         print('-------------')
-        print(f'{"Timestamp":<25}{"Role":<15}{"Message":<60}Total Inference Cost')
+        print(f'{"Timestamp":<25}{"Role":<15}{"Cost":<6}{"Message":<60}')
         for entry in self.activity_log:
-            print(f"{entry['timestamp']:<25}{entry['role']:<15}{entry['message']:<60}{entry['total_inference_cost']}")
+            print(f"{entry['timestamp']:<25}{entry['role']:<15}{entry['total_inference_cost']:<6}{entry['message']:<60}")
+    
+    def validate_response_schema(self, response: dict, schema: dict = None):
+        """This method validates the response against the schema provided in the constructor. If the response is not valid, it raises an exception.
+
+        Args:
+            response (dict): AI generated JSON response
             
+        Raises:
+            KeyError: If the response does not match the schema provided in the constructor.
+        """
+        if schema is None:
+            schema = self.schema
+            
+        if schema.keys() != response.keys():
+            raise KeyError(f'Generated response does not match the schema. Expected keys: {self.schema.keys()}. Response keys: {response.keys()}. If problem persists, try setting a simpler schema or revising system instructions.')
+        
+        for k in schema.keys():
+            if isinstance(schema[k], dict):
+                self.validate_response_schema(schema[k], response[k]) 

@@ -77,10 +77,9 @@ class OpenAI(LanguageModel):
         
         # read response as JSON and return results if it matches the schema or there is no schema
         response = json.loads(response.choices[0].message.content)
-        if self.schema == {} or response.keys() == self.schema.keys():
+        if self.schema == {}:
             return response
         
-        raise KeyError(f'OpenAI generated response does not match the schema. Expected keys: {self.schema.keys()}. Response keys: {response.keys()}. If problem persists, try setting a simpler schema or revising system instructions.')
+        self.validate_response_schema(response)
         
-        
-        
+        return response
