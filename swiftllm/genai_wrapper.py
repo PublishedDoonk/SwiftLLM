@@ -90,7 +90,8 @@ class LanguageModel:
                 return response
             except Exception as e:
                 self.log_activity(e, role='system')
-            return None
+        
+        return None
 
     def log_activity(self, message: any, role: str):
         """
@@ -114,8 +115,7 @@ class LanguageModel:
         Args:
             text (str): the body of text to look for JSON substrings in.
         """
-        
-        
+        pass
     
     def generate(self, prompt, max_tokens):
         """
@@ -131,3 +131,14 @@ class LanguageModel:
         Response should match the response_type specified in the constructor.
         """
         raise NotImplementedError(error_message)
+    
+    def display_activity_log(self):
+        """
+        This method pretty prints the activity log to the console for troubleshooting purposes.
+        """
+        print('ACTIVITY LOG:')
+        print('-------------')
+        print(f'{"Timestamp":<25}{"Role":<15}{"Message":<60}Total Inference Cost')
+        for entry in self.activity_log:
+            print(f"{entry['timestamp']:<25}{entry['role']:<15}{entry['message']:<60}{entry['total_inference_cost']}")
+            

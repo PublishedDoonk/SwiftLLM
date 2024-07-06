@@ -5,7 +5,7 @@ import os
 import json
 
 class OpenAI(LanguageModel):
-    def __init__(self, instructions: str = None, sample_outputs: list = None, schema: dict = None, prev_messages: list = None, response_type: str = None, model: str = 'gpt-4-turbo', streaming=False, organization: str = '', project: str = '', api_key: str = None):
+    def __init__(self, instructions: str = None, sample_outputs: list = None, schema: dict = None, prev_messages: list = None, response_type: str = None, model: str = 'gpt-3.5-turbo', streaming=False, organization: str = '', project: str = '', api_key: str = None):
         if os.getenv('OPENAI_API_KEY') is None and api_key is None:
             raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
         if api_key:
@@ -74,7 +74,12 @@ class OpenAI(LanguageModel):
             return response
         if self.response_type == 'CONTENT':
             return response.choices[0].message.content
-        return json.loads(response.choices[0].message.content)
+        
+        response = json.loads(response.choices[0].message.content)
+        if response.keys() == self.schema.keys():
+            return response
+        
+        raise KeyError(f'OpenAI generated response does not match the schema. Expected keys: {self.schema.keys()}. Response keys: {response.keys()}')
         
         
         
