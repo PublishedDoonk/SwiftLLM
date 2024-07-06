@@ -19,6 +19,9 @@ class OpenAI(LanguageModel):
         self.format_instructions()
     
     def format_messages(self, role: str, content: str):
+        """
+        Saves the role and content as a message in the prev_messages list.
+        """
         self.prev_messages.append({'role': role, 'content': content})
         
     def format_instructions(self):
