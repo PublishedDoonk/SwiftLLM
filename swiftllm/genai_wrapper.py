@@ -161,7 +161,7 @@ class LanguageModel:
             if isinstance(schema[k], dict):
                 self.validate_response_schema(response=response[k], schema=schema[k])
             if isinstance(schema[k], list) and not isinstance(response[k], list):
-                raise ValueError(f'Expected a list for key {k} in response. Received {type(response[k])} instead.')
+                raise ValueError(f'Expected a list for key "{k}" in response. Received {type(response[k])} instead.')
             if not schema[k] or not response[k] or not isinstance(schema[k], list):
                 continue
             if isinstance(schema[k][0], dict):
