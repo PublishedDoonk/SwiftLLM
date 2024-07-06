@@ -155,8 +155,15 @@ class LanguageModel:
             schema = self.schema
             
         if schema.keys() != response.keys():
-            raise KeyError(f'Generated response does not match the schema. Expected keys: {self.schema.keys()}. Response keys: {response.keys()}. If problem persists, try setting a simpler schema or revising system instructions.')
+            raise KeyError(f'Generated response does not match the schema. Expected keys: {schema.keys()}. Response keys: {response.keys()}. If problem persists, try setting a simpler schema or revising system instructions.')
         
         for k in schema.keys():
             if isinstance(schema[k], dict):
-                self.validate_response_schema(schema[k], response[k]) 
+                self.validate_response_schema(response=response[k], schema=schema[k])
+            if isinstance(schema[k], list) and not isinstance(response[k], list):
+                raise ValueError(f'Expected a list for key {k} in response. Received {type(response[k])} instead.')
+            if not schema[k] or not response[k] or not isinstance(schema[k], list):
+                continue
+            if isinstance(schema[k][0], dict):
+                for obj in response[k]:
+                    self.validate_response_schema(response=obj, schema=schema[k][0])
