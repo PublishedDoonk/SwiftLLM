@@ -52,7 +52,7 @@ class OpenAI(LanguageModel):
         }
         
         # if streaming is truthy, set stream to true
-        if self.streaming == 1: 
+        if self.streaming == True: 
             kwargs['stream'] = True
         
         # take advantage of OpenAI's JSON output mode
@@ -61,22 +61,38 @@ class OpenAI(LanguageModel):
         
         return kwargs
         
+    
+    def handle_stream(self, response):
+        """
+        This method handles the stream response from the OpenAI API.
+        """
+        content = ''
+        for chunk in response:
+            if (new_tokens := chunk.choices[0].delta.content) is not None:
+                content = content + new_tokens
+                print(new_tokens, end='')
         
+        return content
+    
     def get_response(self, kwargs: dict):
         """
         Generate a response to the prompt using the OpenAI API. Return the suitable response based on the response_type.
         """
         response = self.client.chat.completions.create(**kwargs)
-        
-        self.format_messages(role='assistant', content=response.choices[0].message.content)
+        if isinstance(response, openai.Stream):
+            content = self.handle_stream(response)
+            self.format_messages(role='assistant', content=content)
+        else:
+            content = response.choices[0].message.content
+            self.format_messages(role='assistant', content=content)
         
         if self.response_type == 'RAW':
             return response
         if self.response_type == 'CONTENT':
-            return response.choices[0].message.content
+            return content
         
         # read response as JSON and return results if it matches the schema or there is no schema
-        response = json.loads(response.choices[0].message.content)
+        response = json.loads(content)
         if self.schema == {}:
             return response
         
