@@ -21,7 +21,7 @@ OPENAI_TOKEN_PRICES = {
     'gpt-3.5-turbo-16k-0613': [0.000003, 0.000004],
     'gpt-3.5-turbo-0301': [0.0000015, 0.000002],
     'davinci-002': [0.000002, 0.000002],
-    'babbage-002': [0.0000004, 0.0000004]
+    'babbage-002': [0.0000004, 0.0000004],
 }
 
 class OpenAI(LanguageModel):
