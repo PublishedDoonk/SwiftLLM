@@ -22,7 +22,7 @@ class LanguageModel:
             response_type (str, optional): Format the model should return as a response. Valid options: ('JSON', 'CONTENT', 'RAW'). Defaults to None.
         """
         self.activity_log: list = [] # store all prompts, responses, and exceptions in the order they occur
-        self.total_inference_cost: float = 0.0 # store the total cost of all inference calls
+        self.last_inference_cost: float = 0.0 # store the total cost of all inference calls
         
         if not instructions or not isinstance(instructions, str):
             instructions = 'You will be provided instructions/prompts. Do your best to generate an appropriate response to the prompts.'
@@ -107,7 +107,7 @@ class LanguageModel:
                 message = 'model generated Response object with status code: ' + message.status_code
         if not isinstance(message, str):
             message = str(message)
-        self.activity_log.append({'timestamp': timestamp, 'role': role, 'message': message, 'total_inference_cost': self.total_inference_cost})
+        self.activity_log.append({'timestamp': timestamp, 'role': role, 'message': message, 'total_inference_cost': self.last_inference_cost})
     
     def parse_json(self, text: str):
         """This function finds a JSON string within the provided text. If there is no JSON found in the text, it raises an Exception.
@@ -167,3 +167,5 @@ class LanguageModel:
             if isinstance(schema[k][0], dict):
                 for obj in response[k]:
                     self.validate_response_schema(response=obj, schema=schema[k][0])
+        
+        return True
