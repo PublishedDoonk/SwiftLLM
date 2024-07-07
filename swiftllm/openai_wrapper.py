@@ -64,11 +64,11 @@ class OpenAI(LanguageModel):
         """
         if isinstance(response, openai.Stream):
             content = self.handle_stream(response)
-            self.format_messages(role='assistant', content=content)
         else:
             content = response.choices[0].message.content
-            self.format_messages(role='assistant', content=content)
-            
+        
+        self.format_messages(role='assistant', content=content)
+        
         return content
     
     def process_response(self, response, content):
