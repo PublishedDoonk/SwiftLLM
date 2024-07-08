@@ -8,3 +8,12 @@
 
 &emsp;&emsp;This library aims to tackle the problems listed above (and any other problems I can fix). First, I want to abstract away the HTTP requests associated with accessing models from different providers and develop a provider agnostic framework that simplifies accessing all the major APIs. Second, this library will implement a way to track inference costs per message and in aggregate. Third, this library will provide a "response_type" argument that can be set to "RAW", "JSON", or "CONTENT", so that the model can generate valid python objects, a string containing the generation, or for power users the default response object from the API. Lastly, there will be an activity log that tracks all prompts, responses, and errors during model prompting. 
 
+## Getting Started
+
+This project is still in its infancy, but it is available on PyPI.
+
+
+To install the library install it with pip.
+
+<code>pip install SwiftLLM</code>
+
