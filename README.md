@@ -26,3 +26,75 @@ For OpenAI the api key needs to be saved as an env variable called OPENAI_API_KE
 ```.env
 OPENAI_API_KEY="<your key here>"
 ```
+
+Once all the API keys you need are configured, you can begin using the LanguageModel objects available in the library. Each model is a child of the LanguageModel class which implements a lot of the core functions that may be needed regardless of which model is chosen, such as JSON validation, the prompt method, saving messages and errors, etc.. You can extend this LanguageModel to develop your own LLM wrapper or import one of the wrappers available in the library (currently only OpenAI).
+
+This is how simple it is to get a reply from ChatGPT using this library.
+
+```python
+from swiftllm import OpenAI
+
+model = OpenAI(instructions="have a chat with me")
+reply = model.prompt("Hello, how's your day going?")
+print(reply)
+```
+
+In the sample above, the model object is an OpenAI object with the system instructions "have a chat with me", the response_type is "CONTENT" by default meaning its response will just be a string, the default model is gpt-3.5-turbo, and it handles all the HTTP request and response parsing behind the scenes. 
+
+OpenAI Note: If you have multiple projects and organizations, you will have to pass them in as arguments. Nothing I can do about that.
+
+A more complicated and useful use case would be using an LLM to generate structured output from an unstructured body of text. The LanguageModel object has two optional arguments: schema and sample_outputs. Schema is a python dictionary that describes the type of object you want the LLM to return to you. The sample outputs is a list of examples containing "good" outputs from the model.
+
+```python
+from swiftllm import OpenAI
+
+schema: dict = {
+    'people': [
+        {
+            'name': 'string',
+            'age': 'int',
+            'title': 'string',
+        }
+    ]
+}
+
+sample_outputs: list = [
+    {
+        'people': [
+            {
+                'name': 'John Doe',
+                'age': 27,
+                'title': 'HR Manager',
+            },
+            {
+                'name': 'Sally Sue',
+                'age': 18,
+                'title': 'Accountant',
+            }
+        ]
+    },
+    {
+        'people': [
+            {
+                'name': 'Cathy Stan',
+                'age': 59,
+                'title': 'Chief Executive Officer',
+            }
+        ]
+    }
+]
+
+instructions: str = 'Find all the people in the given body of text, their age, and what their job title is.'
+
+target_text: str = 'Sheryll Marsh, a 49 year old lawyer from Ohio, was traveling through the hills of Kentucky when something changed her life forever. She found and married her husband Jimmy Dean, a 50 year old mechanic from Delaware.'
+
+model = OpenAI(instructions=instructions, schema=schema, sample_outputs=sample_outputs) # if a schema or sample outputs is provided, JSON response type is automatically selected
+people = model.prompt(target_text)
+
+for person in people['people']:
+    print('name', person['name'])
+    print('age', person['age'])
+    print('title', person['title'])
+
+```
+
