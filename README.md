@@ -17,3 +17,12 @@ To install the library install it with pip.
 
 <code>pip install SwiftLLM</code>
 
+Before you are able to make use of the package, you will still need an API key for whichever model in the library you are interested in using. Currently, only OpenAI generative AI models are supported, but other model provider APIs will be added as time allows.
+
+The API key needs to either be saved in the runtime environment with the default name for that API or passed in as a "key" argument to the model during construction.
+
+For OpenAI the api key needs to be saved as an env variable called OPENAI_API_KEY.
+
+```.env
+OPENAI_API_KEY="<your key here>"
+```
