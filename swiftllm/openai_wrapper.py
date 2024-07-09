@@ -35,8 +35,20 @@ class OpenAI(LanguageModel):
         self.model = model
         self.streaming = streaming
         super().__init__(instructions, sample_outputs, schema, prev_messages, response_type)
+        if self.response_type == 'JSON' and self.no_json_capability():
+            raise TypeError(f'The model {self.model} does not support JSON output. Please choose a model that supports JSON output. The following base models and their offshoots support JSON response: gpt-4o, gpt-4-turbo, gpt-3.5-turbo.')
         self.client = openai.OpenAI()
         self.format_instructions()
+    
+    def no_json_capability(self):
+        """
+        Returns false if self.model is capable of generating JSON strings and True if it is not.
+        """
+        json_capable_models: list[str] = ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo']
+        for model in json_capable_models:
+            if model in self.model.lower(): # the model chosen is capable of returning JSON strings
+                return False 
+        return True # the model chosen is not capable of returning JSON strings
     
     def format_messages(self, role: str, content: str):
         """
