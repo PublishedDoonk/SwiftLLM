@@ -49,7 +49,13 @@ class LanguageModel:
         self.response_type = response_type.upper()
         
         self.format_instructions()
-        
+    
+    def format_messages(self, role: str, content: str):
+        """
+        Saves the role and content as a message in the prev_messages list.
+        """
+        self.prev_messages.append({'role': role, 'content': content})
+    
     def predict_response_type(self):
         """
         This function predicts what the response_type should be if one isn't provided.

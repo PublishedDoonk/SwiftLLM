@@ -28,8 +28,8 @@ class OpenAI(LanguageModel):
     def __init__(self, instructions: str = None, sample_outputs: list = None, schema: dict = None, prev_messages: list = None, response_type: str = None, model: str = 'gpt-3.5-turbo', streaming=False, organization: str = '', project: str = '', api_key: str = None):
         if os.getenv('OPENAI_API_KEY') is None and api_key is None:
             raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
-        if api_key:
-            os.environ['OPENAI_API_KEY'] = api_key
+        if api_key is None:
+            api_key = os.environ['OPENAI_API_KEY']
         self.project = project
         self.organization = organization
         self.model = model
@@ -37,8 +37,21 @@ class OpenAI(LanguageModel):
         super().__init__(instructions, sample_outputs, schema, prev_messages, response_type)
         if self.response_type == 'JSON' and self.no_json_capability():
             raise TypeError(f'The model {self.model} does not support JSON output. Please choose a model that supports JSON output. The following base models and their offshoots support JSON response: gpt-4o, gpt-4-turbo, gpt-3.5-turbo.')
-        self.client = openai.OpenAI()
+        client_kwargs = self.get_client_kwargs(api_key)
+        self.client = openai.OpenAI(**client_kwargs)
         self.format_instructions()
+    
+    def get_client_kwargs(self, api_key):
+        """
+        This function gets a dict of kwargs to pass to the OpenAI client.
+        """
+        kwargs = {'api_key': api_key}
+        if self.organization:
+            kwargs['organization'] = self.organization
+        if self.project:
+            kwargs['project'] = self.project
+        
+        return kwargs
     
     def no_json_capability(self):
         """
@@ -49,19 +62,13 @@ class OpenAI(LanguageModel):
             if model in self.model.lower(): # the model chosen is capable of returning JSON strings
                 return False 
         return True # the model chosen is not capable of returning JSON strings
-    
-    def format_messages(self, role: str, content: str):
-        """
-        Saves the role and content as a message in the prev_messages list.
-        """
-        self.prev_messages.append({'role': role, 'content': content})
         
     def format_instructions(self):
         """
         This method formats the instructions as the first message in prev_messages.
         """
-        self.prev_messages.append({'role': 'system', 'content': self.instructions})
-        self.prev_messages.append({'role': 'assistant', 'content': 'OK. I will follow the system instructions to the best of my ability.'})
+        self.format_messages(role='system', content=self.instructions)
+        self.format_messages(role='assistant', content='OK. I will follow the system instructions to the best of my ability.')
     
     def calculate_inference_cost(self, response: str):
         """
