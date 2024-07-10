@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='SwiftLLM',
-    version='0.0.5',
+    version='0.0.6',
     author='Zachary Ivie',
     author_email='zachary.ivie@gmail.com',
     description='A python package to access most common foundation models easily.',
@@ -18,6 +18,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'openai',
-        'requests'
+        'requests',
+        'groq',
     ],
 )
