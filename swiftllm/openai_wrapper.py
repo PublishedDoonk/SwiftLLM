@@ -29,7 +29,7 @@ class OpenAI(LanguageModel):
         if os.getenv('OPENAI_API_KEY') is None and api_key is None:
             raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
         if api_key is None:
-            api_key = os.environ['OPENAI_API_KEY']
+            api_key = os.environ.get('OPENAI_API_KEY')
         self.project = project
         self.organization = organization
         self.model = model
