@@ -81,10 +81,13 @@ class Groq(LanguageModel):
         """
         Process the generated response from the Groq API and return the appropriate value corresponding with the response_type
         """
-        
         if self.response_type == 'RAW':
             return response
+        
+        content = response.choices[0].message.content
         if self.response_type == 'CONTENT':
-            return response.choices[0].message.content
-        return # TO-DO: parse JSON from response, validate schema, and return dict if valid
+            return content
+        
+        json_obj = self.parse_json_content(content)
+        return json_obj
     

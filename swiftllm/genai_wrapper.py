@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime
 from requests import Response
 
@@ -175,3 +176,19 @@ class LanguageModel:
                     self.validate_response_schema(response=obj, schema=schema[k][0])
         
         return True
+    
+    def parse_json_content(self, content: str):
+        """
+        Find the JSON substring in the content string and return it as a python dictionary.
+        
+        Args:
+            content (str): The content string to parse.
+        """
+        match = re.search(r'\{.*\}', content, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(0))
+            except json.JSONDecodeError:
+                raise ValueError('Model failed to generate a valid JSON string.')
+        else:
+            raise ValueError('Model failed to generate a valid JSON string.')
