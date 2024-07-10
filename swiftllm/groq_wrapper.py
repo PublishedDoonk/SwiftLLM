@@ -70,7 +70,8 @@ class Groq(LanguageModel):
         response = self.client.chat.completions.create(
             messages=self.prev_messages,
             model=self.model,
-            max_tokens=max_tokens
+            max_tokens=max_tokens,
+            temperature=1.0,
         )
         
         content = self.process_response(response)

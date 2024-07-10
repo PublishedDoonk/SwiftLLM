@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='SwiftLLM',
-    version='0.0.4',
+    version='0.0.5',
     author='Zachary Ivie',
     author_email='zachary.ivie@gmail.com',
     description='A python package to access most common foundation models easily.',
