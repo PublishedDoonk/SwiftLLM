@@ -84,7 +84,7 @@ class LanguageModel:
         if self.sample_outputs:
             self. instructions = self. instructions + '\n\n'.join([f'Sample Output {i+1}:\n{json.dumps(s)}' for i, s in enumerate(self.sample_outputs)])
             
-    def prompt(self, prompt: str, retries: int = 3, max_tokens: int = 1024):
+    def prompt(self, prompt: str, retries: int = 3, **kwargs):
         """
         This method calls the generate method and handles any exceptions that occur. It will retry the generate method up to the number of retries specified
         if an exception occurs. 
@@ -92,7 +92,7 @@ class LanguageModel:
         for _ in range(retries):
             try:
                 self.log_activity(prompt, role='user')
-                response = self.generate(prompt, max_tokens)
+                response = self.generate(prompt, **kwargs)
                 self.log_activity(response, role='assistant')
                 return response
             except Exception as e:
