@@ -30,10 +30,7 @@ class OpenAI(LanguageModel):
             raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
         if api_key is None:
             api_key = os.environ.get('OPENAI_API_KEY')
-        #self.project = project
-        #self.organization = organization
         self.model = model
-        #self.streaming = streaming
         super().__init__(instructions, sample_outputs, schema, prev_messages, response_type)
         if self.response_type == 'JSON' and self.no_json_capability():
             raise TypeError(f'The model {self.model} does not support JSON output. Please choose a model that supports JSON output. The following base models and their offshoots support JSON response: gpt-4o, gpt-4-turbo, gpt-3.5-turbo.')
@@ -111,15 +108,27 @@ class OpenAI(LanguageModel):
         if self.response_type == 'JSON':
             prompt = f'Input: {prompt}\n\nOutput JSON Schema:\n{json.dumps(self.schema)}\n\nList of Sample Outputs:\n{json.dumps(self.sample_outputs)}'
         self.format_messages(role='user', content=prompt)
-        kwargs = {**self.kwargs, **kwargs}
-        kwargs['model'] = self.model
-        kwargs['messages'] = self.prev_messages
-        #kwargs = self.get_kwargs(max_tokens)
+        kwargs = self.combine_kwargs(kwargs)
         response = self.get_response(kwargs)
         self.calculate_inference_cost(response)
         content = self.parse_content(response)
                 
         return self.process_response(response, content)
+    
+    def combine_kwargs(self, kwargs: dict):
+        """overrides stored kwargs with kwargs passed in prompt method and combines them with messages and model.
+
+        Args:
+            kwargs (dict): all keyword arguments passed into the prompt method
+
+        Returns:
+            dict: all keyword arguments combined with stored kwargs, messages, and model
+        """
+        kwargs = {**self.kwargs, **kwargs}
+        kwargs['model'] = self.model
+        kwargs['messages'] = self.prev_messages
+        
+        return kwargs
     
     def get_response(self, kwargs: dict):
         """
@@ -130,27 +139,6 @@ class OpenAI(LanguageModel):
             self.model = response.model
         
         return response
-    
-    def get_kwargs(self, max_tokens: int):
-        """
-        Build out all the arguments needed for the OpenAI API call based on the model's properties.
-        """
-        # initialize the kwargs dictionary with model, messages, and max_tokens
-        kwargs = {
-            'model': self.model,
-            'messages': self.prev_messages,
-            'max_tokens': max_tokens,
-        }
-        
-        # if streaming is truthy, set stream to true
-        if self.streaming == True: 
-            kwargs['stream'] = True
-        
-        # take advantage of OpenAI's JSON output mode
-        if self.response_type == 'JSON': 
-            kwargs['response_format'] = {'type': 'json_object'}
-        
-        return kwargs
     
     def handle_stream(self, response):
         """
