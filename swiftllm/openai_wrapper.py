@@ -25,30 +25,31 @@ OPENAI_TOKEN_PRICES = {
 }
 
 class OpenAI(LanguageModel):
-    def __init__(self, instructions: str = None, sample_outputs: list = None, schema: dict = None, prev_messages: list = None, response_type: str = None, model: str = 'gpt-3.5-turbo', streaming=False, organization: str = '', project: str = '', api_key: str = None):
+    def __init__(self, instructions: str = None, sample_outputs: list = None, schema: dict = None, prev_messages: list = None, response_type: str = None, model: str = 'gpt-3.5-turbo', organization: str = '', project: str = '', api_key: str = None, **kwargs):
         if os.getenv('OPENAI_API_KEY') is None and api_key is None:
             raise KeyError('OPENAI_API_KEY not found in environment variables. Please set the OPENAI_API_KEY environment variable to use the OpenAI models.')
         if api_key is None:
             api_key = os.environ.get('OPENAI_API_KEY')
-        self.project = project
-        self.organization = organization
+        #self.project = project
+        #self.organization = organization
         self.model = model
-        self.streaming = streaming
+        #self.streaming = streaming
         super().__init__(instructions, sample_outputs, schema, prev_messages, response_type)
         if self.response_type == 'JSON' and self.no_json_capability():
             raise TypeError(f'The model {self.model} does not support JSON output. Please choose a model that supports JSON output. The following base models and their offshoots support JSON response: gpt-4o, gpt-4-turbo, gpt-3.5-turbo.')
-        client_kwargs = self.get_client_kwargs(api_key)
+        client_kwargs = self.get_client_kwargs(api_key, project, organization)
         self.client = openai.OpenAI(**client_kwargs)
         self.format_instructions()
+        self.kwargs = kwargs
     
-    def get_client_kwargs(self, api_key):
+    def get_client_kwargs(self, api_key, project, organization):
         """
         This function gets a dict of kwargs to pass to the OpenAI client.
         """
         kwargs = {'api_key': api_key}
-        if self.organization:
+        if organization:
             kwargs['organization'] = self.organization
-        if self.project:
+        if project:
             kwargs['project'] = self.project
         
         return kwargs
@@ -103,15 +104,17 @@ class OpenAI(LanguageModel):
         if self.schema == {} or self.validate_response_schema(response):
             return response
     
-    def generate(self, prompt: str, max_tokens: int = 1024):
+    def generate(self, prompt: str, **kwargs):
         """
         This method generates a response from the OpenAI model given a prompt.
         """
         if self.response_type == 'JSON':
             prompt = f'Input: {prompt}\n\nOutput JSON Schema:\n{json.dumps(self.schema)}\n\nList of Sample Outputs:\n{json.dumps(self.sample_outputs)}'
         self.format_messages(role='user', content=prompt)
-        
-        kwargs = self.get_kwargs(max_tokens)
+        kwargs = {**self.kwargs, **kwargs}
+        kwargs['model'] = self.model
+        kwargs['messages'] = self.prev_messages
+        #kwargs = self.get_kwargs(max_tokens)
         response = self.get_response(kwargs)
         self.calculate_inference_cost(response)
         content = self.parse_content(response)
