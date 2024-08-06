@@ -36,6 +36,10 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+# data files and chroma index folder
+data/
+chroma/
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
