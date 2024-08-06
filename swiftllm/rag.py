@@ -1,6 +1,9 @@
 from langchain_community.vectorstores import Chroma
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
+from langchain_community.document_loaders import DirectoryLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.schema import Document
 #from langchain_huggingface import HuggingFaceEmbeddings
 #from sentence_transformers import SentenceTransformer
 #from langchain_community.embeddings import SentenceTransformerEmbeddings
@@ -17,7 +20,38 @@ class RAG:
         self.data_path = self.set_data_path(data_path)
         self.file_exts = self.set_file_exts(file_exts)
         self.db_path = self.set_db_path(db_path)
+        print('Setting embeddings...')
         self.embeddings = self.set_embeddings(embeddings)
+        print('loading documents...')
+        self.documents = self.load_documents()
+        print('splitting documents...')
+        self.chunks = self.split_documents()
+        print('creating database...')
+        self.db = self.create_db()
+
+    def create_db(self):
+        db = Chroma.from_documents(
+            documents=self.chunks,
+            embedding=self.embeddings,
+            persist_directory=self.db_path,
+        )
+        db.persist()
+        return db
+
+    def split_documents(self):
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size = 1000,
+            chunk_overlap = 250,
+            length_function = len,
+            add_start_index = True,
+        )
+        chunks = splitter.split_documents(self.documents)
+        return chunks
+
+    def load_documents(self):
+        loader = DirectoryLoader(self.data_path, self.file_exts)
+        documents = loader.load()
+        return documents
 
     def set_data_path(self, data_path: str):
         if not data_path:
